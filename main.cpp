@@ -42,59 +42,70 @@ void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, 
 
     SDL_GetClipRect(screen, &windowSize);
 
-    float num1;
-    float num2;
+    int windowWidth;
+    int windowHeight;
 
-    if (imageSize.w > imageSize.h) {
-        num1 = static_cast<float>(windowSize.w);
-        num2 = static_cast<float>(windowSize.w) * static_cast<float>(imageSize.h) / static_cast<float>(imageSize.w);
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
-        if (num2 > static_cast<float>(windowSize.h)) {
-            num1 = static_cast<float>(windowSize.h) * static_cast<float>(imageSize.w) / static_cast<float>(imageSize.h);
-            num2 = static_cast<float>(windowSize.h);
+    float imageWidthCorrected;
+    float imageHeightCorrected;
+    float imageWidthUnscaled = imageSize.w;
+    float imageHeightUnscaled = imageSize.h;
+
+    if (imageWidthUnscaled> imageHeightUnscaled) {
+        imageWidthCorrected = static_cast<float>(windowWidth);
+        imageHeightCorrected = static_cast<float>(windowWidth) * imageHeightUnscaled / imageWidthUnscaled;
+
+        if (imageHeightCorrected > static_cast<float>(windowHeight)) {
+            imageWidthCorrected = static_cast<float>(windowHeight) * imageWidthUnscaled / imageHeightUnscaled;
+            imageHeightCorrected = static_cast<float>(windowHeight);
         }
     } else {
-        num1 = static_cast<float>(windowSize.h) * static_cast<float>(imageSize.w) / static_cast<float>(imageSize.h);
-        num2 = static_cast<float>(windowSize.h);
+        imageWidthCorrected = static_cast<float>(windowHeight) * imageWidthUnscaled / imageHeightUnscaled;
+        imageHeightCorrected = static_cast<float>(windowHeight);
 
-        if (num1 > static_cast<float>(windowSize.w)) {
-            num1 = static_cast<float>(windowSize.w);
-            num2 = static_cast<float>(windowSize.w) * static_cast<float>(imageSize.h) / static_cast<float>(imageSize.w);
+        if (imageWidthCorrected > static_cast<float>(windowWidth)) {
+            imageWidthCorrected = static_cast<float>(windowWidth);
+            imageHeightCorrected = static_cast<float>(windowWidth) * imageHeightUnscaled / imageWidthUnscaled;
         }
     }
 
-    float width1 = num1 * scale;
-    float height1 = num2 * scale;
-    float x1 = static_cast<float>(windowSize.w) / 2.0f - width1 / 2.0f;
-    float y1 = static_cast<float>(windowSize.h) / 2.0f - height1 / 2.0f;
+    float imageWidth = imageWidthCorrected * scale;
+    float imageHeight = imageHeightCorrected * scale;
+    float halfImageWidth = imageWidth / 2.0f;
+    float halfImageHeight = imageHeight / 2.0f;
+    float halfWindowWidth = windowWidth / 2.0f;
+    float halfWindowHeight = windowHeight / 2.0f;
+    float imageAbscissa = halfWindowWidth - halfImageWidth;
+    float imageOrdinate = halfWindowHeight - halfImageHeight;
 
     if (scale > 1.0) {
-        if (width1 >= windowSize.w && offset.x - width1 / 2.0f + windowSize.w / 2.0f > 0.0f) {
-            offset.x = static_cast<int>(width1 / 2.0f - windowSize.w / 2.0f);
+        if (imageWidth >= windowWidth && offset.x - halfImageWidth + halfWindowWidth > 0.0f) {
+            offset.x = static_cast<int>(halfImageWidth - halfWindowWidth);
         }
 
-        if (height1 >= windowSize.h && offset.y - height1 / 2.0f + windowSize.h / 2.0f > 0.0f) {
-            offset.y = static_cast<int>(height1 / 2.0f - windowSize.h / 2.0f);
+        if (imageHeight >= windowHeight && offset.y - halfImageHeight + halfWindowHeight > 0.0f) {
+            offset.y = static_cast<int>(halfImageHeight - halfWindowHeight);
         }
 
-        if (width1 >= windowSize.w && offset.x + width1 / 2.0f - windowSize.w / 2.0f < 0.0f) {
-            offset.x = static_cast<int>(windowSize.w / 2.0f - width1 / 2.0f);
+        if (imageWidth >= windowWidth && offset.x + halfImageWidth - halfWindowWidth < 0.0f) {
+            offset.x = static_cast<int>(halfWindowWidth - halfImageWidth);
         }
 
-        if (height1 >= windowSize.h && offset.y + height1 / 2.0 - windowSize.h / 2.0f < 0.0f) {
-            offset.y = static_cast<int>(windowSize.h / 2.0f - height1 / 2.0f);
+        if (imageHeight >= windowHeight && offset.y + imageHeight / 2.0 - halfWindowHeight < 0.0f) {
+            offset.y = static_cast<int>(halfWindowHeight - halfImageHeight);
         }
 
-        x1 = static_cast<float>(windowSize.w) / 2.0f - width1 / 2.0f + offset.x;
-        y1 = static_cast<float>(windowSize.h) / 2.0f - height1 / 2.0f + offset.y;
+        imageAbscissa = halfWindowWidth - halfImageWidth + offset.x;
+        imageOrdinate = halfWindowHeight - halfImageHeight + offset.y;
     }
 
     SDL_Rect imagePosition;
 
-    imagePosition.x = static_cast<int>(x1);
-    imagePosition.y = static_cast<int>(y1);
-    imagePosition.w = static_cast<int>(width1);
-    imagePosition.h = static_cast<int>(height1);
+    imagePosition.x = static_cast<int>(imageAbscissa);
+    imagePosition.y = static_cast<int>(imageOrdinate);
+    imagePosition.w = static_cast<int>(imageWidth);
+    imagePosition.h = static_cast<int>(imageHeight);
 
     SDL_SetWindowTitle(window, path.c_str());
 
@@ -106,6 +117,7 @@ void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, 
 
     SDL_FlushEvent(SDL_KEYDOWN);
     SDL_FlushEvent(SDL_MOUSEWHEEL);
+    SDL_FlushEvent(SDL_MOUSEMOTION);
 }
 
 int main(int argc, char *argv[]) {
