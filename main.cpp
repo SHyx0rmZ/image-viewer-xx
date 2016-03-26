@@ -1,11 +1,8 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <regex>
 #include <SDL.h>
 #include <SDL_image.h>
-//#include <unistd.h>
-//#include <rpc.h>
 
 #include "DirectoryScanner.hh"
 
@@ -14,11 +11,15 @@ const auto product = "image viewer ++";
 const int defaultWidth = 800;
 const int defaultHeight = 600;
 
+// TODO:
+// - speed up
+// - add support for (animated) .gif files
+
 void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, float scale, SDL_Rect &offset, bool resizeWindow = false)
 {
     SDL_FillRect(screen, nullptr, 0);
-
-    auto image = IMG_Load(path.c_str());
+ 
+   auto image = IMG_Load(path.c_str());
 
     SDL_Rect imageSize;
 
@@ -178,7 +179,6 @@ int main(int argc, char *argv[]) {
     bool zooming = false;
     bool resizing = false;
     bool moving = false;
-    std::tuple<int, int> origin;
     float scale = 1.0f;
     SDL_Rect offset = { 0 };
 
@@ -329,7 +329,6 @@ int main(int argc, char *argv[]) {
 
                         case SDL_BUTTON_RIGHT:
                             resizing = true;
-                            origin = std::make_tuple(0, 0);
                             SDL_SetRelativeMouseMode(SDL_TRUE);
 
                             break;
@@ -355,7 +354,6 @@ int main(int argc, char *argv[]) {
                     switch (event.button.button) {
                         case SDL_BUTTON_LEFT:
                             moving = false;
-                            origin = std::make_tuple(-1, -1);
 
                             break;
 
@@ -375,7 +373,6 @@ int main(int argc, char *argv[]) {
                         windowSize.w = std::max(0, windowSize.w + event.motion.xrel);
                         windowSize.h = std::max(0, windowSize.h + event.motion.yrel);
                         SDL_SetWindowSize(window, windowSize.w, windowSize.h);
-                        origin = std::make_tuple(event.motion.x, event.motion.y);
                     } else if (moving) {
                         if (zooming) {
                             offset.x += event.motion.xrel;
