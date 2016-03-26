@@ -1,21 +1,27 @@
 // Created by Patrick Pokatilo on 2016/03/14.
 // Copyright (c) 2016 即死ゲーム開発会社. All rights reserved.
 
+#include <cstring>
 #include <dirent.h>
 #include <sys/stat.h>
 
 #include "DirectoryScanner.hh"
 
-std::vector<std::string> DirectoryScanner::enumerate() {
+using std::move;
+using std::string;
+using std::strncmp;
+using std::vector;
+
+vector<string> DirectoryScanner::enumerate() {
     return this->enumerate_recursive(this->root, 0);
 }
 
-std::vector<std::string> DirectoryScanner::enumerate_recursive(const std::string &root, int depth) {
+vector<string> DirectoryScanner::enumerate_recursive(const string &root, int depth) {
     if (depth > this->maxDepth) {
-        return std::vector<std::string>();
+        return vector<string>();
     }
 
-    std::vector<std::string> entries;
+    vector<string> entries;
     auto dir = opendir(root.c_str());
 
     while (auto entry = readdir(dir)) {
@@ -27,11 +33,11 @@ std::vector<std::string> DirectoryScanner::enumerate_recursive(const std::string
 
         if ((status.st_mode & S_IFMT) == S_IFDIR && strncmp(entry->d_name, ".", 1) && strncmp(entry->d_name, "..", 2)) {
             for (auto child : this->enumerate_recursive(fullPath, depth + 1)) {
-                entries.emplace_back(std::move(child));
+                entries.emplace_back(move(child));
             }
         } else if ((status.st_mode & S_IFMT) == S_IFREG) {
             auto lastDot = fullPath.rfind(".");
-            auto extension = fullPath.substr(lastDot == std::string::npos ? 0 : lastDot);
+            auto extension = fullPath.substr(lastDot == string::npos ? 0 : lastDot);
 
             if (extension == ".jpg" || extension == ".jpeg") {
                 entries.emplace_back(fullPath);
