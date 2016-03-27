@@ -1,6 +1,7 @@
 # image viewer ++
 A small image viewer for personal use. Rewritten in C++ from C# in anticipation of better performance.
 
+[![Build Status](https://travis-ci.org/SHyx0rmZ/image-viewer-xx.svg?branch=develop)](https://travis-ci.org/SHyx0rmZ/image-viewer-xx)
 ## Controls
 ### Keyboard
 - [←] previous image
