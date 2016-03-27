@@ -5,17 +5,24 @@ before_install:
   - (cd SDL2_image-2.0.1 && ./configure && make && sudo make install)
   - wget --no-check-certificate http://cmake.org/files/v3.5/cmake-3.5.1-Linux-x86_64.tar.gz -O - | tar xz
 language: cpp
-compiler:
-  - clang
 matrix:
   include:
     -
-      env: CXX=g++-5.2 CC=gcc-5.2
+      env: CXXBIN=g++-5.2 CBIN=gcc-5.2
       addons:
         apt:
           packages: g++-5.2
           sources:
             - ubuntu-toolchain-r-test
+    -
+      env: CXXBIN=clang++-3.8 CBIN=clang-3.8
+      addons:
+        apt:
+          packages: clang-3.8
+          sources:
+            - llvm-toolchain-precise-3.8
+before_script:
+  - export CXX=$CXXBIN CC=$CBIN
 script:
   - mkdir build
   - cd build
