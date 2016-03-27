@@ -1,13 +1,21 @@
 before_install:
-    - wget http://www.libsdl.org/release/SDL2-2.0.4.tar.gz -O - | tar xz
-    - (cd SDL2-2.0.4 && ./configure && make && sudo make install)
-    - wget http://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz -O - | tar xz
-    - (cd SDL2_image-2.0.1 && ./configure && make && sudo make install)
-    - wget --no-check-certificate http://cmake.org/files/v3.5/cmake-3.5.1-Linux-x86_64.tar.gz -O - | tar xz
+  - wget http://www.libsdl.org/release/SDL2-2.0.4.tar.gz -O - | tar xz
+  - (cd SDL2-2.0.4 && ./configure && make && sudo make install)
+  - wget http://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz -O - | tar xz
+  - (cd SDL2_image-2.0.1 && ./configure && make && sudo make install)
+  - wget --no-check-certificate http://cmake.org/files/v3.5/cmake-3.5.1-Linux-x86_64.tar.gz -O - | tar xz
 language: cpp
 compiler:
-- clang
-- gcc
+  - clang
+matrix:
+  include:
+    -
+      env: CXX=g++-5.2 CC=gcc-5.2
+      addons:
+        apt:
+          packages: g++-5.2
+          sources:
+            - ubuntu-toolchain-r-test
 script:
   - mkdir build
   - cd build
