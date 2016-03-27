@@ -7,4 +7,8 @@ language: cpp
 compiler:
 - clang
 - gcc
-script: cmake
+script:
+  - mkdir build
+  - cd build
+  - cmake -G "Unix Makefiles" ..
+  - make
