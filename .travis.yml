@@ -22,6 +22,7 @@ matrix:
           packages: clang-3.8
           sources:
             - llvm-toolchain-precise
+            - ubuntu-toolchain-r-test
 before_script:
   - export CXX=$CXXBIN CC=$CBIN
 script:
