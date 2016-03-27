@@ -3,6 +3,7 @@ before_install:
     - (cd SDL2-2.0.4 && ./configure && make && sudo make install)
     - wget http://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz -O - | tar xz
     - (cd SDL2_image-2.0.1 && ./configure && make && sudo make install)
+    - wget https://cmake.org/files/v3.5/cmake-3.5.1-Linux-x86_64.tar.gz -O - | tar xz
 language: cpp
 compiler:
 - clang
@@ -10,5 +11,5 @@ compiler:
 script:
   - mkdir build
   - cd build
-  - cmake -G "Unix Makefiles" ..
+  - ../cmake-3.5.1-Linux-x86_64/bin/cmake -G "Unix Makefiles" ..
   - make
