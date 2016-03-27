@@ -6,7 +6,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
 
-set(SOURCE_FILES main.cpp DirectoryScanner.cc DirectoryScanner.hh)
+set(SOURCE_FILES src/main.cpp src/DirectoryScanner.cc src/DirectoryScanner.hh)
 add_executable(image_viewer ${SOURCE_FILES})
 
 set_property(TARGET image_viewer PROPERTY CXX_STANDARD 14)
