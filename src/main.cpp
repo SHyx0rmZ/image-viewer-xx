@@ -15,11 +15,23 @@ const int defaultHeight = 600;
 // - speed up
 // - add support for (animated) .gif files
 
-void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, float scale, SDL_Rect &offset, bool resizeWindow = false)
+struct RenderOptions
+{
+    float scale = 1.0f;
+    SDL_Rect offset = { 0 };
+
+    void reset()
+    {
+        this->scale = 1.0f;
+        this->offset = { 0 };
+    }
+};
+
+void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, RenderOptions &options, bool resizeWindow = false)
 {
     SDL_FillRect(screen, nullptr, 0);
  
-   auto image = IMG_Load(path.c_str());
+    auto image = IMG_Load(path.c_str());
 
     SDL_Rect imageSize;
 
@@ -71,8 +83,8 @@ void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, 
         }
     }
 
-    float imageWidth = imageWidthCorrected * scale;
-    float imageHeight = imageHeightCorrected * scale;
+    float imageWidth = imageWidthCorrected * options.scale;
+    float imageHeight = imageHeightCorrected * options.scale;
     float halfImageWidth = imageWidth / 2.0f;
     float halfImageHeight = imageHeight / 2.0f;
     float halfWindowWidth = windowWidth / 2.0f;
@@ -80,25 +92,25 @@ void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, 
     float imageAbscissa = halfWindowWidth - halfImageWidth;
     float imageOrdinate = halfWindowHeight - halfImageHeight;
 
-    if (scale > 1.0) {
-        if (imageWidth >= windowWidth && offset.x - halfImageWidth + halfWindowWidth > 0.0f) {
-            offset.x = static_cast<int>(halfImageWidth - halfWindowWidth);
+    if (options.scale > 1.0) {
+        if (imageWidth >= windowWidth && options.offset.x - halfImageWidth + halfWindowWidth > 0.0f) {
+            options.offset.x = static_cast<int>(halfImageWidth - halfWindowWidth);
         }
 
-        if (imageHeight >= windowHeight && offset.y - halfImageHeight + halfWindowHeight > 0.0f) {
-            offset.y = static_cast<int>(halfImageHeight - halfWindowHeight);
+        if (imageHeight >= windowHeight && options.offset.y - halfImageHeight + halfWindowHeight > 0.0f) {
+            options.offset.y = static_cast<int>(halfImageHeight - halfWindowHeight);
         }
 
-        if (imageWidth >= windowWidth && offset.x + halfImageWidth - halfWindowWidth < 0.0f) {
-            offset.x = static_cast<int>(halfWindowWidth - halfImageWidth);
+        if (imageWidth >= windowWidth && options.offset.x + halfImageWidth - halfWindowWidth < 0.0f) {
+            options.offset.x = static_cast<int>(halfWindowWidth - halfImageWidth);
         }
 
-        if (imageHeight >= windowHeight && offset.y + imageHeight / 2.0 - halfWindowHeight < 0.0f) {
-            offset.y = static_cast<int>(halfWindowHeight - halfImageHeight);
+        if (imageHeight >= windowHeight && options.offset.y + imageHeight / 2.0 - halfWindowHeight < 0.0f) {
+            options.offset.y = static_cast<int>(halfWindowHeight - halfImageHeight);
         }
 
-        imageAbscissa = halfWindowWidth - halfImageWidth + offset.x;
-        imageOrdinate = halfWindowHeight - halfImageHeight + offset.y;
+        imageAbscissa = halfWindowWidth - halfImageWidth + options.offset.x;
+        imageOrdinate = halfWindowHeight - halfImageHeight + options.offset.y;
     }
 
     SDL_Rect imagePosition;
@@ -179,10 +191,9 @@ int main(int argc, char *argv[]) {
     bool zooming = false;
     bool resizing = false;
     bool moving = false;
-    float scale = 1.0f;
-    SDL_Rect offset = { 0 };
+    RenderOptions options;
 
-    newImage(window, screen, *current, scale, offset, true);
+    newImage(window, screen, *current, options, true);
 
     while (alive) {
         SDL_Event event;
@@ -202,9 +213,8 @@ int main(int argc, char *argv[]) {
 
                             --current;
 
-                            scale = 1.0f;
-                            offset = { 0 };
-                            newImage(window, screen, *current, scale, offset);
+                            options.reset();
+                            newImage(window, screen, *current, options);
                             break;
 
                         case SDLK_RIGHT:
@@ -214,9 +224,8 @@ int main(int argc, char *argv[]) {
                                 current = list.cbegin();
                             }
 
-                            scale = 1.0f;
-                            offset = { 0 };
-                            newImage(window, screen, *current, scale, offset);
+                            options.reset();
+                            newImage(window, screen, *current, options);
                             break;
 
                         case SDLK_TAB:
@@ -238,7 +247,7 @@ int main(int argc, char *argv[]) {
 
                         case SDLK_SPACE:
                             if ((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) == 0) {
-                                newImage(window, screen, *current, scale, offset, true);
+                                newImage(window, screen, *current, options, true);
                             } else {
                                 auto image = IMG_Load(current->c_str());
 
@@ -249,10 +258,10 @@ int main(int argc, char *argv[]) {
 
                                 SDL_FreeSurface(image);
 
-                                scale = static_cast<float>(realWindowSize.w) / (static_cast<float>(realWindowSize.h) * static_cast<float>(imageSize.w) / static_cast<float>(imageSize.h));
-                                offset.x = 0;
-                                offset.y = static_cast<int>(static_cast<float>(imageSize.h) / 2.0f * scale);
-                                newImage(window, screen, *current, scale, offset);
+                                options.scale = static_cast<float>(realWindowSize.w) /(static_cast<float>(realWindowSize.h) * static_cast<float>(imageSize.w) / static_cast<float>(imageSize.h));
+                                options.offset.x = 0;
+                                options.offset.y = static_cast<int>(static_cast<float>(imageSize.h) / 2.0f * options.scale);
+                                newImage(window, screen, *current, options);
                             }
 
                             break;
@@ -291,17 +300,16 @@ int main(int argc, char *argv[]) {
                             }
                         }
 
-                        scale = 1.0f;
-                        offset = { 0 };
-                        newImage(window, screen, *current, scale, offset);
+                        options.reset();
+                        newImage(window, screen, *current, options);
                     } else {
                         if (event.wheel.y > 0) {
-                            scale *= 1.4128f;
+                            options.scale *= 1.4128f;
                         } else {
-                            scale *= 0.7078143f;
+                            options.scale *= 0.7078143f;
                         }
 
-                        newImage(window, screen, *current, scale, offset);
+                        newImage(window, screen, *current, options);
                     }
 
                     break;
@@ -375,9 +383,9 @@ int main(int argc, char *argv[]) {
                         SDL_SetWindowSize(window, windowSize.w, windowSize.h);
                     } else if (moving) {
                         if (zooming) {
-                            offset.x += event.motion.xrel;
-                            offset.y += event.motion.yrel;
-                            newImage(window, screen, *current, scale, offset);
+                            options.offset.x += event.motion.xrel;
+                            options.offset.y += event.motion.yrel;
+                            newImage(window, screen, *current, options);
                         } else if (((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) == 0)) {
                             windowSize.x += event.motion.xrel;
                             windowSize.y += event.motion.yrel;
@@ -391,7 +399,7 @@ int main(int argc, char *argv[]) {
                     switch (event.window.event) {
                         case SDL_WINDOWEVENT_SIZE_CHANGED:
                             screen = SDL_GetWindowSurface(window);
-                            newImage(window, screen, *current, scale, offset);
+                            newImage(window, screen, *current, options);
                             break;
 
                         default:
