@@ -3,6 +3,7 @@
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <unordered_map>
 
 #include "DirectoryScanner.hh"
 
@@ -10,6 +11,8 @@ const auto company = u8"即死ゲーム開発会社";
 const auto product = "image viewer ++";
 const int defaultWidth = 800;
 const int defaultHeight = 600;
+
+#define CACHE_IMAGES 1
 
 // TODO:
 // - speed up
@@ -27,11 +30,23 @@ struct RenderOptions
     }
 };
 
+SDL_Surface *loadImage(const std::string &path) {
+#if CACHE_IMAGES == 1
+    static std::unordered_map<std::string, SDL_Surface *> cache;
+
+    if (cache.find(path) == cache.end()) {
+        cache[path] = IMG_Load(path.c_str());
+    }
+
+    return cache[path];
+#else
+    return IMG_Load(path.c_str());
+#endif
+}
+
 void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, RenderOptions &options, bool resizeWindow = false)
 {
-    SDL_FillRect(screen, nullptr, 0);
- 
-    auto image = IMG_Load(path.c_str());
+    auto image = loadImage(path);
 
     SDL_Rect imageSize;
 
@@ -122,15 +137,23 @@ void newImage(SDL_Window *window, SDL_Surface *screen, const std::string &path, 
 
     SDL_SetWindowTitle(window, path.c_str());
 
+    SDL_FillRect(screen, nullptr, 0);
+
     SDL_BlitScaled(image, nullptr, screen, &imagePosition);
 
+#if CACHE_IMAGES == 0
     SDL_FreeSurface(image);
+#endif
 
     SDL_UpdateWindowSurface(window);
 
     SDL_FlushEvent(SDL_KEYDOWN);
     SDL_FlushEvent(SDL_MOUSEWHEEL);
     SDL_FlushEvent(SDL_MOUSEMOTION);
+}
+
+bool windowsIsNotMaximized(SDL_Window *window) {
+    return (SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) == 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -246,7 +269,7 @@ int main(int argc, char *argv[]) {
                             break;
 
                         case SDLK_SPACE:
-                            if ((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) == 0) {
+                            if (windowsIsNotMaximized(window)) {
                                 newImage(window, screen, *current, options, true);
                             } else {
                                 auto image = IMG_Load(current->c_str());
@@ -321,7 +344,7 @@ int main(int argc, char *argv[]) {
                                 moving = true;
                                 SDL_SetRelativeMouseMode(SDL_TRUE);
                             } else if (event.button.clicks == 2) {
-                                if ((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) == 0) {
+                                if (windowsIsNotMaximized(window)) {
                                     SDL_MaximizeWindow(window);
                                     SDL_Rect maximizedSize;
                                     SDL_Surface *maximizedScreen = SDL_GetWindowSurface(window);
@@ -377,7 +400,7 @@ int main(int argc, char *argv[]) {
                     break;
 
                 case SDL_MOUSEMOTION:
-                    if (((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) == 0) && resizing) {
+                    if (windowsIsNotMaximized(window) && resizing) {
                         windowSize.w = std::max(0, windowSize.w + event.motion.xrel);
                         windowSize.h = std::max(0, windowSize.h + event.motion.yrel);
                         SDL_SetWindowSize(window, windowSize.w, windowSize.h);
