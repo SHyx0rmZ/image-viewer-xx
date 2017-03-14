@@ -8,7 +8,9 @@
 #include <limits>
 #include <vector>
 
-struct DirectoryScanner {
+#include "Enumerator.hh"
+
+struct DirectoryScanner : Enumerator {
     DirectoryScanner(const std::string &root, int maxDepth = std::numeric_limits<int>::max()) : root(root), maxDepth(maxDepth) {
     }
 
